@@ -90,11 +90,14 @@ void drawSubtitles(String subtitle) {
 		 height/2); // y
 }
 
-/* TODO Incoming osc message are forwarded to the oscEvent method. */
+/* TODO
+   - Incoming osc message are forwarded to the oscEvent method. */
 void oscEvent(OscMessage m) {
 	print  ("### received an osc message.");
 	print  (" addrpattern: " + m.addrPattern());
 	println(" typetag: " + m.typetag());
+	String key = new String(m.addrPattern()); // XXX Not tested
+	currentWord = words.get(key);
 }
 
 void draw() {
