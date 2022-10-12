@@ -36,15 +36,15 @@ State state;
 String stopMessage = "/stop";
 
 void setup() {
-	size(800, 800);
+	size(1920, 1080);
 	frameRate(30);
 	pixelDensity(2);
 	smooth(4);
 
 	// Typography
-	PFont font = loadFont("SVTUndertext-48.vlw");
+	PFont font = loadFont("SVTUndertext-72.vlw");
 	textFont(font);
-	textAlign(CENTER, CENTER);
+	textAlign(CENTER, BOTTOM);
 
 	// State
 	state = new State();
@@ -60,7 +60,7 @@ void setup() {
 	for (TableRow row : state.table.rows()) {
 		String key = row.getString("msg");
 
-		int maxWidth = width - 100;
+		int maxWidth = width - 200;
 		String subtitle = wordWrap(row.getString("subtitle"), maxWidth);
 		state.subtitles.set(key, subtitle);
 
@@ -141,6 +141,17 @@ void keyPressed() {
 	}	
 }
 
+void strokeText(String s, int x, int y) {
+	fill(0);
+	text(s, x-1, y);
+	text(s, x, y-1);
+	text(s, x+1, y);
+	text(s, x, y+1);
+	fill(254, 254, 71);
+	text(s, x, y);
+}
+
+
 void drawSubtitles() {
 	String subtitle = state.subtitles.get(lastOscMessage());
 	if (subtitle == null) {
@@ -148,8 +159,8 @@ void drawSubtitles() {
 		return;
 	}
 		
-	fill(254, 254, 71);
-	text(subtitle, width/2, height/2);
+	int marginBottom = 100;
+	strokeText(subtitle, width/2, height-marginBottom);
 }
 
 // TODO: update this to support the new video state management
@@ -176,14 +187,21 @@ void playVideo() {
 	}
 
 	// TODO: Position the video when we have the final frame size (probably 1920x1080?)
-	image(video, 0, 0); 
+	pushMatrix();
+	{
+		// TODO: Differenciate small and large images
+		//       We can encode this data in the csv and keep it around,
+		//       associated with the videoPath
+		translate(width/2, height/2);
+		imageMode(CENTER);
+		image(video, 0, 0, height/2, height/2);
+	}
+	popMatrix();
 }
 
 
 void movieEvent(Movie m) {
 	// println("drawing frame from", state.playingVideoPath);
-	// always tries to draw frame from /test/first? somthing with the processing video implementation???
-	// The `this` paramater in the constructor is a bit... worrying
 	m.read();
 }
 
