@@ -133,11 +133,12 @@ void addTestOscMessage(String msg) {
 
 void keyPressed() {
 	switch(key) {
-	case 'a': addTestOscMessage("/test/one");  break;
-	case 'r': addTestOscMessage("/test/two"); break;
+	case 'a': addTestOscMessage("/test/one");	break;
+	case 'r': addTestOscMessage("/test/two");	break;
 	case 't': addTestOscMessage("/test/three"); break;
-	case 'd': addTestOscMessage("/test/four"); break;
-	case 's': addTestOscMessage(stopMessage);    break;
+	case 'd': addTestOscMessage("/test/four");	break;
+	case 'h': addTestOscMessage("/test/five");	break;
+	case 's': addTestOscMessage(stopMessage);   break;
 	}	
 }
 
@@ -151,7 +152,6 @@ void strokeText(String s, int x, int y) {
 	text(s, x, y);
 }
 
-
 void drawSubtitles() {
 	String subtitle = state.subtitles.get(lastOscMessage());
 	if (subtitle == null) {
@@ -163,7 +163,6 @@ void drawSubtitles() {
 	strokeText(subtitle, width/2, height-marginBottom);
 }
 
-// TODO: update this to support the new video state management
 void playVideo() {
 	Movie video;
 	String lastMessage = lastOscMessage();
@@ -186,13 +185,12 @@ void playVideo() {
 		video = state.videos.get(state.playingVideoPath);
 	}
 
-	// TODO: Position the video when we have the final frame size (probably 1920x1080?)
 	pushMatrix();
 	{
 		// TODO: Differenciate small and large images
 		//       We can encode this data in the csv and keep it around,
 		//       associated with the videoPath
-		translate(width/2, height/2);
+		translate(width/2, height/2-100);
 		imageMode(CENTER);
 		image(video, 0, 0, height/2, height/2);
 	}
