@@ -7,6 +7,7 @@
  */
 
 import java.util.Map;
+import java.util.concurrent.*;
 import processing.video.*;
 import oscP5.*;
 import netP5.*;
@@ -30,6 +31,7 @@ public class State {
 	public OscP5 oscP5;
 	public NetAddress oscSource;
 	public ArrayList<OscMessage> oscMessages;
+	public ArrayBlockingQueue<OscMessage> queuedOscMessages;
 }
 
 State state;
@@ -73,9 +75,12 @@ void setup() {
 	}
 	state.playingVideoPath = null;
 
-	state.oscP5       = new OscP5(this, 12000);
-	state.oscSource   = new NetAddress("127.0.0.1", 12000); // Listens on localhost:12000
-	state.oscMessages = new ArrayList<OscMessage>();
+	int oscPort = 12000;
+	state.oscP5             = new OscP5(this, oscPort);
+	state.oscSource         = new NetAddress("127.0.0.1", oscPort);
+	state.oscMessages       = new ArrayList<OscMessage>();
+	state.queuedOscMessages = new ArrayBlockingQueue<OscMessage>(10);
+
 	state.oscMessages.add(new OscMessage(stopMessage)); // Always start with the stop 
 }
 
@@ -124,11 +129,11 @@ String wordWrap(String s, int maxWidth) {
 // https://sojamo.de/libraries/oscP5/reference/index.html
 void oscEvent(OscMessage m) {
 	println("### new OscMsg: " + m.toString());
-	state.oscMessages.add(m);
+	state.queuedOscMessages.add(m);
 }
 
 void addTestOscMessage(String msg) {
-	state.oscMessages.add(new OscMessage(msg));
+	state.queuedOscMessages.add(new OscMessage(msg));
 }
 
 void keyPressed() {
@@ -152,10 +157,10 @@ void strokeText(String s, int x, int y) {
 	text(s, x, y);
 }
 
-void drawSubtitles() {
-	String subtitle = state.subtitles.get(lastOscMessage());
+void drawSubtitles(String lastMessage) {
+	String subtitle = state.subtitles.get(lastMessage);
 	if (subtitle == null) {
-		println("Error: unable to draw subtitle", subtitle, lastOscMessage());
+		println("Error: unable to draw subtitle", subtitle, lastMessage);
 		return;
 	}
 		
@@ -163,9 +168,8 @@ void drawSubtitles() {
 	strokeText(subtitle, width/2, height-marginBottom);
 }
 
-void playVideo() {
+void playVideo(String lastMessage) {
 	Movie video;
-	String lastMessage = lastOscMessage();
 	String videoPath = state.videoPaths.get(lastMessage);
 
 	if (state.playingVideoPath == null || !state.playingVideoPath.equals(videoPath)) {
@@ -223,13 +227,23 @@ String lastOscMessage() {
 	return state.oscMessages.get(last).addrPattern();
 }
 
+void handleOscMessageQueue() {
+	if (state.queuedOscMessages.peek() != null) {
+		OscMessage message = state.queuedOscMessages.poll();
+		state.oscMessages.add(message);
+	}
+}
+	
 void draw() {
-	if (lastOscMessage().equals(stopMessage)) {
+	handleOscMessageQueue();
+	String lastMessage = lastOscMessage();
+
+	if (lastMessage.equals(stopMessage)) {
 		stopVideo();
 		background(0);
 	} else {
 		background(0);
-		playVideo();
-		drawSubtitles();
+		playVideo(lastMessage);
+		drawSubtitles(lastMessage);
 	}
 }
