@@ -16,7 +16,7 @@ public class State {
 
 	public StringDict subtitles;
 	public HashMap<String, Movie> videos;
-	public boolean videoIsPlaying;
+	public String playingVideo;
 
 	public OscP5 oscP5;
 	public NetAddress oscSource;
@@ -57,7 +57,8 @@ void setup() {
 		String path = row.getString("video");
 		state.videos.put(key, new Movie(this, path));
 	}
-	state.videoIsPlaying = false;
+	println(state.subtitles);
+	state.playingVideo = null;
 
 	state.oscP5       = new OscP5(this, 12000);
 	state.oscSource   = new NetAddress("127.0.0.1", 12000); // Listens on localhost:12000
@@ -113,32 +114,71 @@ void oscEvent(OscMessage m) {
 	state.oscMessages.add(m);
 }
 
-void drawSubtitles(String subtitle) {
+void addTestOscMessage(String msg) {
+	state.oscMessages.add(new OscMessage(msg));
+}
+
+void keyPressed() {
+	switch(key) {
+	case 'a': addTestOscMessage("/test/first");  break;
+	case 'r': addTestOscMessage("/test/second"); break;
+	case 's': addTestOscMessage(stopMessage);    break;
+	}	
+}
+
+void drawSubtitles() {
+	String subtitle = state.subtitles.get(lastOscMessage());
+	if (subtitle == null) {
+		println("Error: unable to draw subtitle", subtitle, lastOscMessage());
+		return;
+	}
+		
 	fill(254, 254, 71);
 	text(subtitle, width/2, height/2);
 }
 
-void playVideo(Movie video) {
-	if (!state.videoIsPlaying) {
+void playVideo() {
+	Movie video;
+	String lastMessage = lastOscMessage();
+
+	if (state.playingVideo == null || !state.playingVideo.equals(lastMessage)) {
+		stopVideo(); // Make sure to stop the playing of the old video
+
+		video = state.videos.get(lastMessage);
+		println("starting new video", lastMessage);
+		if (video == null) { // This is only reached when a video has been incorrectly loaded
+			println("Error: unable to play video", lastMessage);
+			assert(false); // We would rather not have errors in our dataset than to gracefully handle them
+		}
+
 		video.loop();
-		state.videoIsPlaying = true;
+		state.playingVideo = lastMessage;
+	} else {
+		video = state.videos.get(lastMessage);
 	}
 
-	if (video != null) {
-		image(video, 0, 0); // TODO: Pos
-	}
+	// TODO: Position the video when we have the final frame size (probably 1920x1080?)
+	image(video, 0, 0); 
 }
 
+
 void movieEvent(Movie m) {
+	// println("drawing frame from", state.playingVideo);
+	// always tries to draw frame from /test/first? somthing with the processing video implementation???
+	// The `this` paramater in the constructor is a bit... worrying
 	m.read();
 }
 
 void stopVideo() {
-	Movie video = getCurrentVideo();
-	if (video.available()) {
+	if (state.playingVideo == null) return;
+
+	Movie video = state.videos.get(state.playingVideo);
+	if (video != null) {
+		println("Stopping video", state.playingVideo, video);
 		video.stop();
-		video = null;
 	}
+
+	state.playingVideo = null;
 }
 
 // NOTE: I assume that we use the `addrPattern` part of the OscMessage
@@ -148,20 +188,21 @@ String lastOscMessage() {
 	return state.oscMessages.get(last).addrPattern();
 }
 
-String getCurrentSubtitle() {
-	return state.subtitles.get(lastOscMessage());
-}
-
-Movie getCurrentVideo() {
-	return state.videos.get(lastOscMessage());
-}
-
 void draw() {
-	if (lastOscMessage() == stopMessage) {
+	if (lastOscMessage().equals(stopMessage)) {
 		stopVideo();
 		background(0);
 	} else {
-		playVideo(getCurrentVideo());
-		drawSubtitles(getCurrentSubtitle());
+		background(0);
+		playVideo();
+		drawSubtitles();
 	}
 }
+
+/*
+  - två olika saker
+  - syntetiska fältinspelningar
+  - Svart bakgrund
+  - Kören
+  - Filmisk bakgrund
+*/
