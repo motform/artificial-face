@@ -163,13 +163,14 @@ void playVideo() {
 
 		state.playingVideoPath = videoPath;
 		video = state.videos.get(state.playingVideoPath);
-		println("starting new video", state.playingVideoPath);
+
 		if (video == null) { // This is only reached when a video has been incorrectly loaded
 			println("Error: unable to play video", videoPath, "from message", lastMessage);
 			assert(false); // We would rather not have errors in our dataset than to gracefully handle them
 		} else {
-		video.loop();
+			video.loop();
 		}
+
 	} else {
 		video = state.videos.get(state.playingVideoPath);
 	}
@@ -216,11 +217,3 @@ void draw() {
 		drawSubtitles();
 	}
 }
-
-/*
-  - två olika saker
-  - syntetiska fältinspelningar
-  - Svart bakgrund
-  - Kören
-  - Filmisk bakgrund
-*/
