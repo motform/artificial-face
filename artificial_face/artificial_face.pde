@@ -15,8 +15,17 @@ public class State {
 	public Table table;
 
 	public StringDict subtitles;
+	/* The video tracking is a bit more complicated than the rest.
+	   First, we keep a dict of msg->path. This is required as several msg can share the same path.
+	   Then, we have a map of path->Movie, where the Movie is reference to a buffered P5 object.
+	   This decoupling makes it possible and easy to keep playing the same object when swapping msg.
+	   Finally, we need to know what is currently playing in order to stop it when switching video.
+	   Hence, the `playingVideoPath` property.
+	   — LLA 221012
+	*/
+	public StringDict videoPaths;
 	public HashMap<String, Movie> videos;
-	public String playingVideo;
+	public String playingVideoPath;
 
 	public OscP5 oscP5;
 	public NetAddress oscSource;
@@ -43,10 +52,11 @@ void setup() {
 	state.table = loadTable("data.csv", "header");
 	assert(state.table.getRowCount() > 0);
 
-	state.subtitles = new StringDict();
-	state.videos = new HashMap<String, Movie>();
-	// Perform wordWrapping and video loading in a prepass
-	// NOTE: make sure all the video clips fit in memory
+	// Perform word wrapping and video buffering in a prepass
+	// NOTE: Make sure all the video clips fit in memory
+	state.subtitles  = new StringDict();
+	state.videoPaths = new StringDict();
+	state.videos     = new HashMap<String, Movie>();
 	for (TableRow row : state.table.rows()) {
 		String key = row.getString("msg");
 
@@ -54,16 +64,19 @@ void setup() {
 		String subtitle = wordWrap(row.getString("subtitle"), maxWidth);
 		state.subtitles.set(key, subtitle);
 
-		String path = row.getString("video");
-		state.videos.put(key, new Movie(this, path));
+		String videoPath = row.getString("video");
+		state.videoPaths.set(key, videoPath);
+		if (!state.videos.containsKey(videoPath)) {
+			Movie video = new Movie(this, videoPath);
+			state.videos.put(videoPath, video);
+		}
 	}
-	println(state.subtitles);
-	state.playingVideo = null;
+	state.playingVideoPath = null;
 
 	state.oscP5       = new OscP5(this, 12000);
 	state.oscSource   = new NetAddress("127.0.0.1", 12000); // Listens on localhost:12000
 	state.oscMessages = new ArrayList<OscMessage>();
-	state.oscMessages.add(new OscMessage("/test/first")); // XXX: test
+	state.oscMessages.add(new OscMessage(stopMessage)); // Always start with the stop 
 }
 
 boolean startsWithSpace(String s) {
@@ -120,8 +133,10 @@ void addTestOscMessage(String msg) {
 
 void keyPressed() {
 	switch(key) {
-	case 'a': addTestOscMessage("/test/first");  break;
-	case 'r': addTestOscMessage("/test/second"); break;
+	case 'a': addTestOscMessage("/test/one");  break;
+	case 'r': addTestOscMessage("/test/two"); break;
+	case 't': addTestOscMessage("/test/three"); break;
+	case 'd': addTestOscMessage("/test/four"); break;
 	case 's': addTestOscMessage(stopMessage);    break;
 	}	
 }
@@ -137,24 +152,26 @@ void drawSubtitles() {
 	text(subtitle, width/2, height/2);
 }
 
+// TODO: update this to support the new video state management
 void playVideo() {
 	Movie video;
 	String lastMessage = lastOscMessage();
+	String videoPath = state.videoPaths.get(lastMessage);
 
-	if (state.playingVideo == null || !state.playingVideo.equals(lastMessage)) {
+	if (state.playingVideoPath == null || !state.playingVideoPath.equals(videoPath)) {
 		stopVideo(); // Make sure to stop the playing of the old video
 
-		video = state.videos.get(lastMessage);
-		println("starting new video", lastMessage);
+		state.playingVideoPath = videoPath;
+		video = state.videos.get(state.playingVideoPath);
+		println("starting new video", state.playingVideoPath);
 		if (video == null) { // This is only reached when a video has been incorrectly loaded
-			println("Error: unable to play video", lastMessage);
+			println("Error: unable to play video", videoPath, "from message", lastMessage);
 			assert(false); // We would rather not have errors in our dataset than to gracefully handle them
-		}
-
+		} else {
 		video.loop();
-		state.playingVideo = lastMessage;
+		}
 	} else {
-		video = state.videos.get(lastMessage);
+		video = state.videos.get(state.playingVideoPath);
 	}
 
 	// TODO: Position the video when we have the final frame size (probably 1920x1080?)
@@ -163,22 +180,23 @@ void playVideo() {
 
 
 void movieEvent(Movie m) {
-	// println("drawing frame from", state.playingVideo);
+	// println("drawing frame from", state.playingVideoPath);
 	// always tries to draw frame from /test/first? somthing with the processing video implementation???
 	// The `this` paramater in the constructor is a bit... worrying
 	m.read();
 }
 
 void stopVideo() {
-	if (state.playingVideo == null) return;
+	if (state.playingVideoPath == null) return;
 
-	Movie video = state.videos.get(state.playingVideo);
+	String videoPath = state.videoPaths.get(state.playingVideoPath);
+	Movie video = state.videos.get(videoPath);
 	if (video != null) {
-		println("Stopping video", state.playingVideo, video);
+		println("Stopping video", videoPath, state.playingVideoPath, video);
 		video.stop();
 	}
 
-	state.playingVideo = null;
+	state.playingVideoPath = null;
 }
 
 // NOTE: I assume that we use the `addrPattern` part of the OscMessage
