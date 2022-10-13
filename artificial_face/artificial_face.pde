@@ -13,7 +13,7 @@ import oscP5.*;
 import netP5.*;
 
 // Settings
-boolean DEBUG = false;
+boolean DEBUG = true;
 boolean SQUARE_VIDEO = false;
 
 public class State {
@@ -44,8 +44,6 @@ String stopMessage = "/stop";
 void setup() {
 	size(1920, 1080);
 	frameRate(30);
-	pixelDensity(2);
-	smooth(4);
 
 	// Typography
 	PFont font = loadFont("SVTUndertext-72.vlw");
@@ -77,7 +75,7 @@ void setup() {
 			state.videos.put(videoPath, video);
 		}
 	}
-	state.playingVideoPath = null;
+	state.playingVideoPath = "blank.mp4";
 
 	int oscPort = 12000;
 	state.oscP5             = new OscP5(this, oscPort);
@@ -141,11 +139,11 @@ void addTestOscMessage(String msg) {
 
 void keyPressed() {
 	switch(key) {
-	case 'a': addTestOscMessage("/test/one");		break;
-	case 'r': addTestOscMessage("/test/two");		break;
-	case 't': addTestOscMessage("/test/three");		break;
-	case 'd': addTestOscMessage("/test/four");		break;
-	case 'h': addTestOscMessage("/test/five");		break;
+	case 'a': addTestOscMessage("/01/01/00");		break;
+	case 'r': addTestOscMessage("/01/01/01");		break;
+	case 't': addTestOscMessage("/02/01/01");		break;
+	case 'd': addTestOscMessage("/02/01/00");		break;
+	case 'h': addTestOscMessage("/03/01/00");		break;
 	case 'b': addTestOscMessage("/bongo/tvman");	break;
 	case 's': addTestOscMessage(stopMessage);		break;
 	}	
@@ -177,7 +175,7 @@ void playVideo(String lastMessage) {
 	String videoPath = state.videoPaths.get(lastMessage);
 
 	if (state.playingVideoPath == null || !state.playingVideoPath.equals(videoPath)) {
-		stopVideo(); // Make sure to stop the playing of the old video
+		stopVideo(state.playingVideoPath); // Make sure to stop the playing of the old video
 
 		state.playingVideoPath = videoPath;
 		video = state.videos.get(state.playingVideoPath);
@@ -216,17 +214,17 @@ void movieEvent(Movie m) {
 	m.read();
 }
 
-void stopVideo() {
-	if (state.playingVideoPath == null) return;
-
-	String videoPath = state.videoPaths.get(state.playingVideoPath);
-	Movie video = state.videos.get(videoPath);
-	if (video != null) {
-		println("Stopping video", videoPath, state.playingVideoPath, video);
-		video.stop();
+void stopVideo(String videoPlayingPath) {
+	if (videoPlayingPath == null) {
+		println("Error: Trying to stop video videoPlayingPath that is null.");
+		return;
 	}
 
-	state.playingVideoPath = null;
+	Movie video = state.videos.get(videoPlayingPath);
+	if (video != null) {
+		println("Stopping video", videoPlayingPath, video);
+		video.stop();
+	}
 }
 
 void handleOscMessageQueue() {
