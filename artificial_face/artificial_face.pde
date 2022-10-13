@@ -12,6 +12,10 @@ import processing.video.*;
 import oscP5.*;
 import netP5.*;
 
+// Settings
+boolean DEBUG = false;
+boolean SQUARE_VIDEO = false;
+
 public class State {
 	public Table table;
 
@@ -32,11 +36,11 @@ public class State {
 	public NetAddress oscSource;
 	public ArrayList<OscMessage> oscMessages;
 	public ArrayBlockingQueue<OscMessage> queuedOscMessages;
+	public OscMessage oscMessage;
 }
 
 State state;
 String stopMessage = "/stop";
-boolean DEBUG = false;
 
 void setup() {
 	size(1920, 1080);
@@ -83,6 +87,7 @@ void setup() {
 	state.queuedOscMessages = new ArrayBlockingQueue<OscMessage>(10);
 
 	state.oscMessages.add(new OscMessage(stopMessage)); // Always start with the stop 
+	state.oscMessage = new OscMessage(stopMessage); // Always start with the stop 
 }
 
 boolean startsWithSpace(String s) {
@@ -192,16 +197,20 @@ void playVideo(String lastMessage) {
 		video = state.videos.get(state.playingVideoPath);
 	}
 
-	pushMatrix();
-	{
-		// TODO: Differenciate small and large images
-		//       We can encode this data in the csv and keep it around,
-		//       associated with the videoPath
-		translate(width/2, height/2-100);
-		imageMode(CENTER);
-		image(video, 0, 0, height/2, height/2);
+	if (SQUARE_VIDEO) {
+		pushMatrix();
+		{
+			// TODO: Differenciate small and large images
+			//       We can encode this data in the csv and keep it around,
+			//       associated with the videoPath
+			translate(width/2, height/2-100);
+			imageMode(CENTER);
+			image(video, 0, 0, height/2, height/2);
+		}
+		popMatrix();
+	} else {
+		image(video, 0, 0);
 	}
-	popMatrix();
 }
 
 
@@ -234,13 +243,15 @@ void handleOscMessageQueue() {
 	if (state.queuedOscMessages.peek() != null) {
 		OscMessage message = state.queuedOscMessages.poll();
 		String msg = message.addrPattern();
-		if (state.subtitles.hasKey(msg)) state.oscMessages.add(message);
+		// if (state.subtitles.hasKey(msg)) state.oscMessages.add(message);
+		if (state.subtitles.hasKey(msg)) state.oscMessage = message;
 	}
 }
 	
 void draw() {
 	handleOscMessageQueue();
-	String lastMessage = lastOscMessage();
+	// String lastMessage = lastOscMessage();
+	String lastMessage = state.oscMessage.addrPattern();
 
 	if (lastMessage.equals(stopMessage)) {
 		stopVideo();
