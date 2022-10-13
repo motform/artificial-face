@@ -42,7 +42,8 @@ State state;
 String stopMessage = "/stop";
 
 void setup() {
-	size(1920, 1080);
+	fullScreen(2);
+	// size(1920, 1080);
 	frameRate(30);
 
 	// Typography
