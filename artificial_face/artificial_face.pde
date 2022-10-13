@@ -36,6 +36,7 @@ public class State {
 
 State state;
 String stopMessage = "/stop";
+boolean DEBUG = false;
 
 void setup() {
 	size(1920, 1080);
@@ -52,7 +53,7 @@ void setup() {
 	state = new State();
 
 	state.table = loadTable("data.csv", "header");
-	assert(state.table.getRowCount() > 0);
+	if (DEBUG) assert(state.table.getRowCount() > 0);
 
 	// Perform word wrapping and video buffering in a prepass
 	// NOTE: Make sure all the video clips fit in memory
@@ -138,12 +139,13 @@ void addTestOscMessage(String msg) {
 
 void keyPressed() {
 	switch(key) {
-	case 'a': addTestOscMessage("/test/one");	break;
-	case 'r': addTestOscMessage("/test/two");	break;
-	case 't': addTestOscMessage("/test/three"); break;
-	case 'd': addTestOscMessage("/test/four");	break;
-	case 'h': addTestOscMessage("/test/five");	break;
-	case 's': addTestOscMessage(stopMessage);   break;
+	case 'a': addTestOscMessage("/test/one");		break;
+	case 'r': addTestOscMessage("/test/two");		break;
+	case 't': addTestOscMessage("/test/three");		break;
+	case 'd': addTestOscMessage("/test/four");		break;
+	case 'h': addTestOscMessage("/test/five");		break;
+	case 'b': addTestOscMessage("/bongo/tvman");	break;
+	case 's': addTestOscMessage(stopMessage);		break;
 	}	
 }
 
@@ -180,7 +182,8 @@ void playVideo(String lastMessage) {
 
 		if (video == null) { // This is only reached when a video has been incorrectly loaded
 			println("Error: unable to play video", videoPath, "from message", lastMessage);
-			assert(false); // We would rather not have errors in our dataset than to gracefully handle them
+			if (DEBUG) assert(false); // We would rather not have errors in our dataset than to gracefully handle them
+			return;
 		} else {
 			video.loop();
 		}
@@ -230,7 +233,8 @@ String lastOscMessage() {
 void handleOscMessageQueue() {
 	if (state.queuedOscMessages.peek() != null) {
 		OscMessage message = state.queuedOscMessages.poll();
-		state.oscMessages.add(message);
+		String msg = message.addrPattern();
+		if (state.subtitles.hasKey(msg)) state.oscMessages.add(message);
 	}
 }
 	
