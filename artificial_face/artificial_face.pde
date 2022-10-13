@@ -34,7 +34,6 @@ public class State {
 
 	public OscP5 oscP5;
 	public NetAddress oscSource;
-	public ArrayList<OscMessage> oscMessages;
 	public ArrayBlockingQueue<OscMessage> queuedOscMessages;
 	public OscMessage oscMessage;
 }
@@ -83,10 +82,8 @@ void setup() {
 	int oscPort = 12000;
 	state.oscP5             = new OscP5(this, oscPort);
 	state.oscSource         = new NetAddress("127.0.0.1", oscPort);
-	state.oscMessages       = new ArrayList<OscMessage>();
 	state.queuedOscMessages = new ArrayBlockingQueue<OscMessage>(10);
 
-	state.oscMessages.add(new OscMessage(stopMessage)); // Always start with the stop 
 	state.oscMessage = new OscMessage(stopMessage); // Always start with the stop 
 }
 
@@ -232,33 +229,19 @@ void stopVideo() {
 	state.playingVideoPath = null;
 }
 
-// NOTE: I assume that we use the `addrPattern` part of the OscMessage
-//       as our key? If not, change the method call here ↓
-String lastOscMessage() {
-	int last = state.oscMessages.size()-1;
-	return state.oscMessages.get(last).addrPattern();
-}
-
 void handleOscMessageQueue() {
 	if (state.queuedOscMessages.peek() != null) {
 		OscMessage message = state.queuedOscMessages.poll();
 		String msg = message.addrPattern();
-		// if (state.subtitles.hasKey(msg)) state.oscMessages.add(message);
 		if (state.subtitles.hasKey(msg)) state.oscMessage = message;
 	}
 }
 	
 void draw() {
 	handleOscMessageQueue();
-	// String lastMessage = lastOscMessage();
 	String lastMessage = state.oscMessage.addrPattern();
 
-	if (lastMessage.equals(stopMessage)) {
-		stopVideo();
-		background(0);
-	} else {
-		background(0);
-		playVideo(lastMessage);
-		drawSubtitles(lastMessage);
-	}
+	background(0);
+	playVideo(lastMessage);
+	drawSubtitles(lastMessage);
 }
