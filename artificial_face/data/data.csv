@@ -1,10 +1,5 @@
 msg,subtitle,video
 "/stop","","blank.mp4"
-"/test/one","you are homo sapiens$being smart is your destiny","terrain.mp4"
-"/test/two","'Hey, Tony. You up for some shwarma?''sure, Steve. I could go for some shawarma.''Great. I'll meet you there in half an hour.'",terrain_edit.mp4
-"/test/three","FIGURE: Subject #13. artificial face. Incomplete.",terrain.mp4
-"/test/four"," [[She looks up, as if she is seeing the face for the first time. She reaches out to touch it, but her hand passes through it. She looks confused and scared.]]",terrain.mp4
-"/test/five","SCENE IV [[inside the Artificial Face]] _light is falling faster and faster_ _sightlines are burned_ _we can only see shadows of what once was_ _",blank.mp4
 "/01/01/00","And so, a structure of skin with scales, a fictive impression.","blank.mp4"
 "/01/01/01","A kind of deterritorialisation of the skin.","blank.mp4"
 "/01/01/02","An artificial creature is not a natural creature","blank.mp4"
@@ -25,10 +20,10 @@ msg,subtitle,video
 "/02/01/01","It increases toward a center...$the center of danger is here... [pointing to the floor]$within these walls. ","terrain_0.mp4"
 "/02/01/02","Although natural phenomena may$have produced this place...","terrain_0.mp4"
 "/02/01/03","It is a warning to those who would come unduly to trust the power of its progress and its control.","terrain_0.mp4"
-"/02/01/04","The danger is unique and not unique...$as far as we know it has never happened before, may never happen again...$yet it happens all the time.","terrain_0.mp4"
+"/02/01/04","The danger is unique and not unique... as far as we know it has never happened before, may never happen again... yet it happens all the time.","terrain_0.mp4"
 "/02/02/00","This effort to communicate a warning to deter inadvertent human intrusion is necessary.","terrain_1.mp4"
 "/02/02/01","As such intrusions are improbable, they must be rendered sort of impractical if not impossible.","terrain_1.mp4"
-"/02/02/02","The time spent 'monitoring' these situations$we now call conditions that must be dealt with$using Passive Institutional Controls.","terrain_1.mp4"
+"/02/02/02","The time spent 'monitoring' these situations we now call conditions that must be dealt with using Passive Institutional Controls.","terrain_1.mp4"
 "/02/02/03","Because they are passive by nature and there is nothing to do about them but watch them, study their behaviour.","terrain_1.mp4"
 "/02/02/04","The Arco Monument Project Office charged with the implementation of this project is currently working with OSWER-RI and Lawrence Livermore National Laboratory regarding risk estimates associated with future burial grounds.","terrain_1.mp4"
 "/02/03/00","Multiple shafts with plugs would reinforce the message, and in case a repository was successful given the climatic conditions of its location.","terrain_3.mp4"
