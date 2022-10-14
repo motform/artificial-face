@@ -12,9 +12,9 @@ import processing.video.*;
 import oscP5.*;
 import netP5.*;
 
-// Settings
-boolean DEBUG = true;
+boolean DEBUG = false;
 boolean SQUARE_VIDEO = false;
+boolean PREPLAY_VIDEO = false;
 
 public class State {
 	public Table table;
@@ -42,7 +42,7 @@ State state;
 String stopMessage = "/stop";
 
 void setup() {
-	fullScreen(2);
+	fullScreen(1);
 	// size(1920, 1080);
 	frameRate(30);
 
@@ -73,6 +73,7 @@ void setup() {
 		state.videoPaths.set(key, videoPath);
 		if (!state.videos.containsKey(videoPath)) {
 			Movie video = new Movie(this, videoPath);
+			video.loop();
 			state.videos.put(videoPath, video);
 		}
 	}
@@ -167,7 +168,7 @@ void drawSubtitles(String lastMessage) {
 		return;
 	}
 		
-	int marginBottom = 100;
+	int marginBottom = 200;
 	strokeText(subtitle, width/2, height-marginBottom);
 }
 
@@ -176,7 +177,7 @@ void playVideo(String lastMessage) {
 	String videoPath = state.videoPaths.get(lastMessage);
 
 	if (state.playingVideoPath == null || !state.playingVideoPath.equals(videoPath)) {
-		stopVideo(state.playingVideoPath); // Make sure to stop the playing of the old video
+		// stopVideo(state.playingVideoPath); // Make sure to stop the playing of the old video
 
 		state.playingVideoPath = videoPath;
 		video = state.videos.get(state.playingVideoPath);
@@ -186,7 +187,7 @@ void playVideo(String lastMessage) {
 			if (DEBUG) assert(false); // We would rather not have errors in our dataset than to gracefully handle them
 			return;
 		} else {
-			video.loop();
+			if (!PREPLAY_VIDEO) video.loop();
 		}
 
 	} else {
@@ -205,7 +206,7 @@ void playVideo(String lastMessage) {
 		}
 		popMatrix();
 	} else {
-		image(video, 0, 0);
+		image(video, 0, 0); // NOTE: Might have to scale here
 	}
 }
 
@@ -216,6 +217,8 @@ void movieEvent(Movie m) {
 }
 
 void stopVideo(String videoPlayingPath) {
+	if (PREPLAY_VIDEO) return;
+
 	if (videoPlayingPath == null) {
 		println("Error: Trying to stop video videoPlayingPath that is null.");
 		return;
